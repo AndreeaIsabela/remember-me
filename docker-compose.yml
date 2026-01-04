@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: ./remember-me-api
+      dockerfile: Dockerfile.dev
+    container_name: remember-me-api
+    ports:
+      - "3000:3000"
+      - "9229:9229"  # Debug port
+    env_file:
+      - ./remember-me-api/.env
+    volumes:
+      - ./remember-me-api/src:/app/src
+      - ./remember-me-api/package.json:/app/package.json
+      - ./remember-me-api/package-lock.json:/app/package-lock.json
+      - ./remember-me-api/tsconfig.json:/app/tsconfig.json
+      - ./remember-me-api/tsconfig.build.json:/app/tsconfig.build.json
+      - ./remember-me-api/nest-cli.json:/app/nest-cli.json
+      # Exclude node_modules from host, use container's node_modules
+      - /app/node_modules
+    depends_on:
+      - mongodb
+      - mailhog
+    restart: unless-stopped
+    networks:
+      - remember-me-network
+
+  mongodb:
+    image: mongo:7.0
+    container_name: remember-me-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=remember-me
+    volumes:
+      - mongodb_data:/data/db
+    restart: unless-stopped
+    networks:
+      - remember-me-network
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: remember-me-mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    restart: unless-stopped
+    networks:
+      - remember-me-network
+
+networks:
+  remember-me-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+

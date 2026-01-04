@@ -1,0 +1,24 @@
+
+# Development Dockerfile
+FROM node:24-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install all dependencies (including dev dependencies)
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Expose ports (3000 for API, 9229 for debugging)
+EXPOSE 3000 9229
+
+# Set NODE_ENV to development
+ENV NODE_ENV=development
+
+# Start the application in debug mode
+CMD ["npm", "run", "start:debug"]
+
