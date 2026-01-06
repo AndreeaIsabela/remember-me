@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import configuration from './config/configuration';
 import { AuthModule } from './auth/auth.module';
 import { NotesModule } from './notes/notes.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { NotesModule } from './notes/notes.module';
     }),
     AuthModule,
     NotesModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

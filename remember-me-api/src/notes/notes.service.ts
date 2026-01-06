@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Note, NoteDocument } from './schemas/note.schema';
 import { CreateNoteDto } from './dto/create-note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
@@ -28,7 +28,7 @@ export class NotesService {
 
   async findRandom(userId: string): Promise<NoteDocument | null> {
     const notes = await this.noteModel.aggregate([
-      { $match: { owner: userId } },
+      { $match: { owner: new Types.ObjectId(userId) } },
       { $sample: { size: 1 } },
     ]);
 
