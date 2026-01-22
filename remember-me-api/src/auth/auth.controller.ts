@@ -5,6 +5,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Get,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
@@ -75,7 +76,7 @@ export class AuthController {
     );
   }
 
-  @Post('confirm-email')
+  @Get('confirm-email')
   @HttpCode(HttpStatus.OK)
   async confirmEmail(@Body() confirmEmailDto: ConfirmEmailDto) {
     return this.authService.confirmEmail(confirmEmailDto.token);

@@ -11,7 +11,7 @@ export class EmailService {
     this.transporter = nodemailer.createTransport({
       host: this.configService.get<string>('smtp.host'),
       port: this.configService.get<number>('smtp.port'),
-      secure: false, // MailHog doesn't use TLS
+      secure: false,
     });
   }
 
@@ -57,7 +57,7 @@ export class EmailService {
     verificationToken: string,
     userName: string,
   ): Promise<void> {
-    const verifyUrl = `http://localhost:3000/verify-email?token=${verificationToken}`;
+    const verifyUrl = `http://localhost:3000/confirm-email?token=${verificationToken}`;
     const from = this.configService.get<string>('smtp.from');
 
     await this.transporter.sendMail({
