@@ -23,6 +23,7 @@ export class EmailService {
     const resetUrl = `http://localhost:3000/reset-password?token=${resetToken}`;
     const from = this.configService.get<string>('smtp.from');
 
+    //TODO: Update link to redirect to the mobile app
     await this.transporter.sendMail({
       from,
       to: email,
@@ -59,7 +60,8 @@ export class EmailService {
   ): Promise<void> {
     const verifyUrl = `http://localhost:3000/confirm-email?token=${verificationToken}`;
     const from = this.configService.get<string>('smtp.from');
-
+    
+    //TODO: Update link to redirect to the mobile app
     await this.transporter.sendMail({
       from,
       to: email,
