@@ -1,5 +1,9 @@
 export default () => ({
   port: parseInt(process.env.PORT ?? '3000', 10),
+  app: {
+    apiUrl: process.env.API_URL || 'http://localhost:3000',
+    mobileScheme: process.env.MOBILE_APP_SCHEME || 'rememberme://',
+  },
   database: {
     uri: process.env.MONGODB_URI,
   },

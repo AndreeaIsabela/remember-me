@@ -6,7 +6,11 @@ import {
   HttpCode,
   HttpStatus,
   Get,
+  Query,
+  Res,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -14,14 +18,16 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
-import { ConfirmEmailDto } from './dto/confirm-email.dto';
 import { ResendVerificationDto } from './dto/resend-verification.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Post('register')
   async register(@Body() registerDto: RegisterDto) {
@@ -77,9 +83,15 @@ export class AuthController {
   }
 
   @Get('confirm-email')
-  @HttpCode(HttpStatus.OK)
-  async confirmEmail(@Body() confirmEmailDto: ConfirmEmailDto) {
-    return this.authService.confirmEmail(confirmEmailDto.token);
+  async confirmEmail(@Query('token') token: string, @Res() res: Response) {
+    const mobileScheme = this.configService.get<string>('app.mobileScheme');
+
+    try {
+      await this.authService.confirmEmail(token);
+      return res.redirect(`${mobileScheme}?confirmed=true`);
+    } catch {
+      return res.redirect(`${mobileScheme}?error=confirmation_failed`);
+    }
   }
 
   @Post('resend-verification')
