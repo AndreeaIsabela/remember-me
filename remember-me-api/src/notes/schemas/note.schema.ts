@@ -8,8 +8,8 @@ export class Note {
   @Prop({ required: true })
   text: string;
 
-  @Prop({ required: true })
-  source: string;
+  @Prop({ required: false })
+  source?: string;
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true, index: true })
   owner: Types.ObjectId;
