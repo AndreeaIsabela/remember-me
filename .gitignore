@@ -33,3 +33,13 @@ Thumbs.db
 *.tmp
 .temp/
 
+# Expo
+.expo/
+dist/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
