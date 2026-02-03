@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 import { useNotes } from '../contexts/NotesContext';
 import { useAuth } from '../contexts/AuthContext';
 import { AddNoteModal } from '../components/AddNoteModal';
@@ -24,6 +25,8 @@ type RootStackParamList = {
   Register: undefined;
   ForgotPassword: undefined;
   ResetPassword: { token: string };
+  Settings: undefined;
+  Schedule: undefined;
 };
 
 type NotesScreenNavigationProp = NativeStackNavigationProp<
@@ -34,7 +37,7 @@ type NotesScreenNavigationProp = NativeStackNavigationProp<
 export function NotesScreen() {
   const navigation = useNavigation<NotesScreenNavigationProp>();
   const { notes, isLoading, addNote, updateNote, deleteNote, syncNotes } = useNotes();
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
@@ -60,13 +63,6 @@ export function NotesScreen() {
     ]);
   };
 
-  const handleLogout = () => {
-    Alert.alert('Logout', 'Are you sure you want to logout?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Logout', style: 'destructive', onPress: logout },
-    ]);
-  };
-
   const renderNote = ({ item }: { item: Note }) => (
     <SwipeableNoteCard
       note={item}
@@ -80,18 +76,12 @@ export function NotesScreen() {
     <View style={styles.headerContainer}>
       <View style={styles.headerTop}>
         <Text style={styles.headerTitle}>Remember Me</Text>
-        {isAuthenticated ? (
-          <TouchableOpacity onPress={handleLogout} style={styles.authButton}>
-            <Text style={styles.authButtonText}>Logout</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            onPress={() => navigation.navigate('Login')}
-            style={styles.authButton}
-          >
-            <Text style={styles.authButtonText}>Login</Text>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Settings')}
+          style={styles.settingsButton}
+        >
+          <Ionicons name="settings-outline" size={24} color="#4CAF50" />
+        </TouchableOpacity>
       </View>
       {isAuthenticated && user && (
         <Text style={styles.welcomeText}>Welcome, {user.name}</Text>
@@ -187,16 +177,8 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#1a1a1a',
   },
-  authButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 20,
-  },
-  authButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#4CAF50',
+  settingsButton: {
+    padding: 8,
   },
   welcomeText: {
     fontSize: 14,

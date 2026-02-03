@@ -8,6 +8,8 @@ import { LoginScreen } from '../screens/LoginScreen';
 import { RegisterScreen } from '../screens/RegisterScreen';
 import { ForgotPasswordScreen } from '../screens/ForgotPasswordScreen';
 import { ResetPasswordScreen } from '../screens/ResetPasswordScreen';
+import { SettingsScreen } from '../screens/SettingsScreen';
+import { ScheduleScreen } from '../screens/ScheduleScreen';
 
 export type RootStackParamList = {
   Notes: undefined;
@@ -15,6 +17,8 @@ export type RootStackParamList = {
   Register: undefined;
   ForgotPassword: undefined;
   ResetPassword: { token: string };
+  Settings: undefined;
+  Schedule: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -28,6 +32,8 @@ const linking = {
       Register: 'register',
       ForgotPassword: 'forgot-password',
       ResetPassword: 'reset-password',
+      Settings: 'settings',
+      Schedule: 'schedule',
     },
   },
 };
@@ -77,6 +83,20 @@ export function AppNavigator({ onDeepLink }: AppNavigatorProps) {
         <Stack.Screen
           name="ResetPassword"
           component={ResetPasswordScreen}
+          options={{
+            animation: 'slide_from_right',
+          }}
+        />
+        <Stack.Screen
+          name="Settings"
+          component={SettingsScreen}
+          options={{
+            animation: 'slide_from_right',
+          }}
+        />
+        <Stack.Screen
+          name="Schedule"
+          component={ScheduleScreen}
           options={{
             animation: 'slide_from_right',
           }}
