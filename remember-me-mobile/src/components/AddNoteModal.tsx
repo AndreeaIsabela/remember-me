@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,12 @@ import {
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
+  Animated,
+  Dimensions,
 } from 'react-native';
+
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const ANIMATION_DURATION = 300;
 
 interface AddNoteModalProps {
   visible: boolean;
@@ -22,6 +27,45 @@ export function AddNoteModal({ visible, onClose, onSave }: AddNoteModalProps) {
   const [noteText, setNoteText] = useState('');
   const [noteSource, setNoteSource] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  
+  const overlayOpacity = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+
+  useEffect(() => {
+    if (visible) {
+      setModalVisible(true);
+      // Animate in: fade overlay and slide content
+      Animated.parallel([
+        Animated.timing(overlayOpacity, {
+          toValue: 1,
+          duration: ANIMATION_DURATION,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: ANIMATION_DURATION,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      // Animate out: fade overlay and slide content
+      Animated.parallel([
+        Animated.timing(overlayOpacity, {
+          toValue: 0,
+          duration: ANIMATION_DURATION,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: SCREEN_HEIGHT,
+          duration: ANIMATION_DURATION,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        setModalVisible(false);
+      });
+    }
+  }, [visible]);
 
   const handleSave = async () => {
     if (!noteText.trim() || isSubmitting) return;
@@ -47,17 +91,27 @@ export function AddNoteModal({ visible, onClose, onSave }: AddNoteModalProps) {
 
   return (
     <Modal
-      visible={visible}
-      animationType="slide"
+      visible={modalVisible}
+      animationType="none"
       transparent={true}
       onRequestClose={handleClose}
     >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.modalOverlay}
-        >
-          <View style={styles.modalContent}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.modalContainer}
+      >
+        <TouchableWithoutFeedback onPress={handleClose}>
+          <Animated.View
+            style={[styles.modalOverlay, { opacity: overlayOpacity }]}
+          />
+        </TouchableWithoutFeedback>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <Animated.View
+            style={[
+              styles.modalContent,
+              { transform: [{ translateY: slideAnim }] },
+            ]}
+          >
             <View style={styles.header}>
               <Text style={styles.modalTitle}>Add Note</Text>
               <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
@@ -107,18 +161,21 @@ export function AddNoteModal({ visible, onClose, onSave }: AddNoteModalProps) {
                 </Text>
               </TouchableOpacity>
             </View>
-          </View>
-        </KeyboardAvoidingView>
-      </TouchableWithoutFeedback>
+          </Animated.View>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  modalOverlay: {
+  modalContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
+  },
+  modalOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
     backgroundColor: '#fff',

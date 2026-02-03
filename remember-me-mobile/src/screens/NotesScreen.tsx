@@ -5,15 +5,17 @@ import {
   TouchableOpacity,
   StyleSheet,
   Text,
-  SafeAreaView,
   RefreshControl,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNotes } from '../contexts/NotesContext';
 import { useAuth } from '../contexts/AuthContext';
 import { AddNoteModal } from '../components/AddNoteModal';
+import { NoteDetailModal } from '../components/NoteDetailModal';
+import { SwipeableNoteCard } from '../components/SwipeableNoteCard';
 import { Note } from '../types';
 
 type RootStackParamList = {
@@ -31,9 +33,21 @@ type NotesScreenNavigationProp = NativeStackNavigationProp<
 
 export function NotesScreen() {
   const navigation = useNavigation<NotesScreenNavigationProp>();
-  const { notes, isLoading, addNote, deleteNote, syncNotes } = useNotes();
+  const { notes, isLoading, addNote, updateNote, deleteNote, syncNotes } = useNotes();
   const { isAuthenticated, user, logout } = useAuth();
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+  const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+
+  const handleNotePress = (note: Note) => {
+    setSelectedNote(note);
+    setIsDetailModalVisible(true);
+  };
+
+  const handleEditNote = (note: Note) => {
+    setSelectedNote(note);
+    setIsDetailModalVisible(true);
+  };
 
   const handleDeleteNote = (note: Note) => {
     Alert.alert('Delete Note', 'Are you sure you want to delete this note?', [
@@ -54,24 +68,12 @@ export function NotesScreen() {
   };
 
   const renderNote = ({ item }: { item: Note }) => (
-    <TouchableOpacity
-      style={styles.noteCard}
-      onLongPress={() => handleDeleteNote(item)}
-      delayLongPress={500}
-    >
-      <Text style={styles.noteText}>{item.text}</Text>
-      {item.source && <Text style={styles.noteSource}>— {item.source}</Text>}
-      <View style={styles.noteFooter}>
-        <Text style={styles.noteDate}>
-          {new Date(item.createdAt).toLocaleDateString()}
-        </Text>
-        {!item.isSynced && (
-          <View style={styles.unsyncedBadge}>
-            <Text style={styles.unsyncedText}>Not synced</Text>
-          </View>
-        )}
-      </View>
-    </TouchableOpacity>
+    <SwipeableNoteCard
+      note={item}
+      onPress={() => handleNotePress(item)}
+      onEdit={() => handleEditNote(item)}
+      onDelete={() => handleDeleteNote(item)}
+    />
   );
 
   const renderHeader = () => (
@@ -134,7 +136,7 @@ export function NotesScreen() {
       {/* FAB */}
       <TouchableOpacity
         style={styles.fab}
-        onPress={() => setIsModalVisible(true)}
+        onPress={() => setIsAddModalVisible(true)}
         activeOpacity={0.8}
       >
         <Text style={styles.fabText}>+</Text>
@@ -142,9 +144,21 @@ export function NotesScreen() {
 
       {/* Add Note Modal */}
       <AddNoteModal
-        visible={isModalVisible}
-        onClose={() => setIsModalVisible(false)}
+        visible={isAddModalVisible}
+        onClose={() => setIsAddModalVisible(false)}
         onSave={addNote}
+      />
+
+      {/* Note Detail Modal */}
+      <NoteDetailModal
+        visible={isDetailModalVisible}
+        note={selectedNote}
+        onClose={() => {
+          setIsDetailModalVisible(false);
+          setSelectedNote(null);
+        }}
+        onSave={updateNote}
+        onDelete={deleteNote}
       />
     </SafeAreaView>
   );
@@ -198,52 +212,6 @@ const styles = StyleSheet.create({
   listContent: {
     padding: 16,
     paddingBottom: 100,
-  },
-  noteCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 18,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  noteText: {
-    fontSize: 16,
-    color: '#333',
-    lineHeight: 24,
-  },
-  noteSource: {
-    fontSize: 14,
-    color: '#888',
-    fontStyle: 'italic',
-    marginTop: 10,
-  },
-  noteFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-  },
-  noteDate: {
-    fontSize: 12,
-    color: '#aaa',
-  },
-  unsyncedBadge: {
-    backgroundColor: '#fff3e0',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  unsyncedText: {
-    fontSize: 11,
-    color: '#ff9800',
-    fontWeight: '600',
   },
   emptyContainer: {
     flex: 1,
