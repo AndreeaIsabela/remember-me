@@ -39,3 +39,10 @@ export interface CreateNoteDto {
   text: string;
   source?: string;
 }
+
+export interface ScheduleSettings {
+  startHour: number;
+  endHour: number;
+  notificationCount: number;
+  isEnabled: boolean;
+}

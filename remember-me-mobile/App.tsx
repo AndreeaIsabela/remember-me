@@ -2,11 +2,38 @@ import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { Alert } from 'react-native';
 import * as Linking from 'expo-linking';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AuthProvider } from './src/contexts/AuthContext';
-import { NotesProvider } from './src/contexts/NotesContext';
+import { NotesProvider, useNotes } from './src/contexts/NotesContext';
 import { AppNavigator } from './src/navigation/AppNavigator';
+import { scheduleAllNotifications } from './src/screens/ScheduleScreen';
+import { ScheduleSettings } from './src/types';
+
+const SCHEDULE_STORAGE_KEY = 'schedule_settings';
+
+function NotificationScheduler() {
+  const { notes, isLoading } = useNotes();
+
+  useEffect(() => {
+    if (isLoading || notes.length === 0) return;
+
+    (async () => {
+      try {
+        const stored = await AsyncStorage.getItem(SCHEDULE_STORAGE_KEY);
+        if (!stored) return;
+        const settings: ScheduleSettings = JSON.parse(stored);
+        if (!settings.isEnabled) return;
+        await scheduleAllNotifications(settings, notes);
+      } catch (error) {
+        console.error('Failed to reschedule notifications:', error);
+      }
+    })();
+  }, [isLoading, notes]);
+
+  return null;
+}
 
 export default function App() {
   useEffect(() => {
@@ -56,6 +83,7 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
         <NotesProvider>
+          <NotificationScheduler />
           <StatusBar style="dark" />
           <AppNavigator />
         </NotesProvider>
