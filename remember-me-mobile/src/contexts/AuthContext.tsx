@@ -7,6 +7,7 @@ import React, {
   ReactNode,
 } from 'react';
 import * as SecureStore from 'expo-secure-store';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { authApi } from '../api/auth.api';
 import { User, Tokens } from '../types';
 
@@ -16,6 +17,7 @@ interface AuthContextType {
   user: User | null;
   tokens: Tokens | null;
   login: (email: string, password: string) => Promise<void>;
+  googleLogin: () => Promise<void>;
   logout: () => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<string>;
 }
@@ -71,6 +73,30 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setIsAuthenticated(true);
   }, []);
 
+  const googleLogin = useCallback(async () => {
+    await GoogleSignin.hasPlayServices();
+    const userInfo = await GoogleSignin.signIn();
+    const idToken = userInfo.data?.idToken;
+    if (!idToken) throw new Error('No ID token from Google');
+
+    const response = await authApi.googleLogin(idToken);
+
+    const newTokens: Tokens = {
+      accessToken: response.accessToken,
+      refreshToken: response.refreshToken,
+    };
+    try{
+      console.warn({newTokens, asd:'ceva'});
+      await SecureStore.setItemAsync('tokens', JSON.stringify(newTokens));
+      await SecureStore.setItemAsync('user', JSON.stringify(response.user));
+    }catch(error) {
+      console.warn({newTokens});
+    }
+    setTokens(newTokens);
+    setUser(response.user);
+    setIsAuthenticated(true);
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       // Try to logout on server (might fail if token expired)
@@ -102,6 +128,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         user,
         tokens,
         login,
+        googleLogin,
         logout,
         register,
       }}

@@ -12,8 +12,14 @@ export class User {
   @Prop({ required: true, unique: true, lowercase: true })
   email: string;
 
-  @Prop({ required: true, select: false })
-  password: string;
+  @Prop({ required: false, select: false })
+  password?: string;
+
+  @Prop({ unique: true, sparse: true })
+  googleId?: string;
+
+  @Prop({ type: [String], default: [] })
+  authProviders: string[];
 
   @Prop()
   refreshToken?: string;
@@ -37,7 +43,7 @@ export class User {
 export const UserSchema = SchemaFactory.createForClass(User);
 
 UserSchema.pre('save', async function () {
-  if (!this.isModified('password')) {
+  if (!this.isModified('password') || !this.password) {
     return;
   }
 

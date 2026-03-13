@@ -13,8 +13,29 @@ export class UserService {
     email: string,
     password: string,
   ): Promise<UserDocument> {
-    const user = new this.userModel({ name, email, password });
+    const user = new this.userModel({ name, email, password, authProviders: ['local'] });
     return user.save();
+  }
+
+  async findOrCreateGoogleUser(
+    googleId: string,
+    email: string,
+    name: string,
+  ): Promise<UserDocument> {
+    const user = await this.userModel.findOneAndUpdate(
+      { email: email.toLowerCase() },
+      {
+        $setOnInsert: {
+          name,
+          email: email.toLowerCase(),
+          isEmailVerified: true,
+        },
+        $set: { googleId },
+        $addToSet: { authProviders: 'google' },
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true },
+    );
+    return user;
   }
 
   async findByEmail(email: string): Promise<UserDocument | null> {
@@ -72,6 +93,10 @@ export class UserService {
     user.password = newPassword;
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
+    if (!user.authProviders) user.authProviders = [];
+    if (!user.authProviders.includes('local')) {
+      user.authProviders.push('local');
+    }
     await user.save();
   }
 

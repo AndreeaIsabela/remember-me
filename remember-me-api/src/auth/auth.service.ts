@@ -7,6 +7,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
+import { OAuth2Client, TokenPayload } from 'google-auth-library';
 import { UserService } from '../user/user.service';
 import { EmailService } from '../email/email.service';
 import { RegisterDto } from './dto/register.dto';
@@ -15,12 +16,18 @@ import { JwtPayload } from './strategies/jwt.strategy';
 
 @Injectable()
 export class AuthService {
+  private googleClient: OAuth2Client;
+
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
     private configService: ConfigService,
     private emailService: EmailService,
-  ) {}
+  ) {
+    this.googleClient = new OAuth2Client(
+      this.configService.get<string>('google.clientId'),
+    );
+  }
 
   async register(registerDto: RegisterDto) {
     const { name, email, password } = registerDto;
@@ -60,6 +67,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    if (!user.password) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
@@ -79,6 +90,7 @@ export class AuthService {
         id: user.id,
         name: user.name,
         email: user.email,
+        authProviders: user.authProviders ?? ['local'],
       },
       ...tokens,
     };
@@ -159,6 +171,12 @@ export class AuthService {
       throw new UnauthorizedException('User not found');
     }
 
+    if (!userWithPassword.password) {
+      throw new BadRequestException(
+        'No password set on this account. Use Forgot Password to create one.',
+      );
+    }
+
     const isPasswordValid = await bcrypt.compare(
       currentPassword,
       userWithPassword.password,
@@ -203,6 +221,46 @@ export class AuthService {
     return {
       message:
         'If an unverified account with that email exists, a verification link has been sent',
+    };
+  }
+
+  async googleLogin(idToken: string) {
+    const clientId = this.configService.get<string>('google.clientId');
+    const iosClientId = this.configService.get<string>('google.iosClientId');
+    const audience = [clientId, iosClientId].filter(Boolean) as string[];
+
+    let payload: TokenPayload | undefined;
+    try {
+      const ticket = await this.googleClient.verifyIdToken({
+        idToken,
+        audience,
+      });
+      payload = ticket.getPayload();
+    } catch {
+      throw new UnauthorizedException('Invalid Google token');
+    }
+
+    if (!payload?.email || !payload?.sub) {
+      throw new UnauthorizedException('Google token missing required fields');
+    }
+
+    const user = await this.userService.findOrCreateGoogleUser(
+      payload.sub,
+      payload.email,
+      payload.name ?? payload.email,
+    );
+
+    const tokens = await this.generateTokens(user.id, user.email);
+    await this.userService.updateRefreshToken(user.id, tokens.refreshToken);
+
+    return {
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        authProviders: user.authProviders,
+      },
+      ...tokens,
     };
   }
 

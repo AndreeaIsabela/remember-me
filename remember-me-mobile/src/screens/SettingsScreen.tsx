@@ -84,6 +84,22 @@ export function SettingsScreen() {
 
         <View style={styles.divider} />
 
+        {isAuthenticated && (user?.authProviders?.includes('local') ?? true) && (
+          <>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => navigation.navigate('ForgotPassword')}
+            >
+              <View style={styles.menuIconContainer}>
+                <Ionicons name="key-outline" size={22} color="#4CAF50" />
+              </View>
+              <Text style={styles.menuText}>Change Password</Text>
+              <Ionicons name="chevron-forward" size={20} color="#ccc" />
+            </TouchableOpacity>
+            <View style={styles.divider} />
+          </>
+        )}
+
         {isAuthenticated ? (
           <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
             <View style={styles.menuIconContainer}>

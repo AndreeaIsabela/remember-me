@@ -25,6 +25,7 @@ import { NotesModule } from './notes/notes.module';
         SMTP_HOST: Joi.string().default('localhost'),
         SMTP_PORT: Joi.number().default(1025),
         SMTP_FROM: Joi.string().default('noreply@remember-me.local'),
+        GOOGLE_CLIENT_ID: Joi.string().required(),
       }),
     }),
     MongooseModule.forRootAsync({

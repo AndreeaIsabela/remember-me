@@ -17,5 +17,9 @@ export default () => ({
     port: parseInt(process.env.SMTP_PORT ?? '1025', 10),
     from: process.env.SMTP_FROM || 'noreply@remember-me.local',
   },
+  google: {
+    clientId: process.env.GOOGLE_CLIENT_ID,
+    iosClientId: process.env.GOOGLE_IOS_CLIENT_ID,
+  },
 });
 

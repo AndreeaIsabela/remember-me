@@ -4,6 +4,7 @@ import { Alert } from 'react-native';
 import * as Linking from 'expo-linking';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 import { AuthProvider } from './src/contexts/AuthContext';
 import { NotesProvider, useNotes } from './src/contexts/NotesContext';
@@ -36,6 +37,13 @@ function NotificationScheduler() {
 }
 
 export default function App() {
+  useEffect(() => {
+    GoogleSignin.configure({
+      webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+      iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+    });
+  }, []);
+
   useEffect(() => {
     // Handle deep link when app is opened from closed state
     const handleInitialURL = async () => {

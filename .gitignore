@@ -33,6 +33,14 @@ Thumbs.db
 *.tmp
 .temp/
 
+# BMAD
+_bmad/
+_bmad-output/
+
+# Claude
+.claude/
+CLAUDE.md
+
 # Expo
 .expo/
 dist/
