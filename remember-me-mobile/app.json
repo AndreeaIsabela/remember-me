@@ -15,7 +15,8 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.rememberme.app"
+      "bundleIdentifier": "com.rememberme.app",
+      "backgroundModes": ["fetch"]
     },
     "android": {
       "adaptiveIcon": {

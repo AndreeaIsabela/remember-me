@@ -8,16 +8,17 @@ import {
   Alert,
   ScrollView,
   ActivityIndicator,
-  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
-import { SchedulableTriggerInputTypes } from 'expo-notifications';
 import { useNotes } from '../contexts/NotesContext';
-import { ScheduleSettings, Note } from '../types';
+import { ScheduleSettings } from '../types';
+
+import { scheduleAllNotifications } from '../utils/scheduleNotifications';
+import { registerRescheduleTask, unregisterRescheduleTask } from '../tasks/rescheduleNotifications';
 
 const SCHEDULE_STORAGE_KEY = 'schedule_settings';
 
@@ -52,40 +53,6 @@ async function requestNotificationPermissions(): Promise<boolean> {
   return status === 'granted';
 }
 
-export async function scheduleAllNotifications(
-  settings: ScheduleSettings,
-  notes: Note[],
-): Promise<number> {
-  await Notifications.cancelAllScheduledNotificationsAsync();
-
-  if (!settings.isEnabled || notes.length === 0) return 0;
-
-  const { startHour, endHour, notificationCount } = settings;
-  const intervalMinutes = (endHour - startHour) * 60;
-
-  for (let i = 0; i < notificationCount; i++) {
-    const randomNote = notes[Math.floor(Math.random() * notes.length)];
-    const randomMinutes = Math.floor(Math.random() * intervalMinutes);
-    const hour = Math.floor((startHour * 60 + randomMinutes) / 60);
-    const minute = (startHour * 60 + randomMinutes) % 60;
-
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: 'Remember This',
-        body: randomNote.text,
-        data: { noteId: randomNote.id },
-        ...(Platform.OS === 'android' && { sound: true }),
-      },
-      trigger: {
-        type: SchedulableTriggerInputTypes.DAILY,
-        hour,
-        minute,
-      },
-    });
-  }
-
-  return notificationCount;
-}
 
 function HourStepper({
   label,
@@ -232,6 +199,11 @@ export function ScheduleScreen() {
 
       await AsyncStorage.setItem(SCHEDULE_STORAGE_KEY, JSON.stringify(settings));
       const count = await scheduleAllNotifications(settings, notes);
+      if (settings.isEnabled) {
+        await registerRescheduleTask();
+      } else {
+        await unregisterRescheduleTask();
+      }
       setSavedSettings(settings);
 
       Alert.alert(
