@@ -4,6 +4,7 @@ import { Alert } from 'react-native';
 import * as Linking from 'expo-linking';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import Toast from 'react-native-toast-message';
 
 import { AuthProvider } from './src/contexts/AuthContext';
 import { NotesProvider, useNotes } from './src/contexts/NotesContext';
@@ -88,6 +89,7 @@ export default function App() {
           <AppNavigator />
         </NotesProvider>
       </AuthProvider>
+      <Toast />
     </GestureHandlerRootView>
   );
 }

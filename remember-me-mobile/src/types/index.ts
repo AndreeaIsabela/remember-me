@@ -46,3 +46,14 @@ export interface ScheduleSettings {
   notificationCount: number;
   isEnabled: boolean;
 }
+
+export type RecordingState = 'idle' | 'recording' | 'stopped' | 'error';
+
+export interface UseVoiceDictationReturn {
+  state: RecordingState;
+  interimTranscript: string;
+  start: () => void;
+  confirm: (onAppend: (text: string) => void) => void;
+  discard: () => void;
+  pause: () => void;
+}

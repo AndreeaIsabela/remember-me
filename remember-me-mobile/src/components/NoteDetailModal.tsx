@@ -16,6 +16,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { Note } from '../types';
+import { VoiceDictationButton } from './VoiceDictationButton';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const ANIMATION_DURATION = 300;
@@ -43,6 +44,7 @@ export function NoteDetailModal({
 
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+  const selectionRef = useRef<{ start: number; end: number }>({ start: 0, end: 0 });
 
   // Handle animation when visibility changes
   useEffect(() => {
@@ -174,17 +176,34 @@ export function NoteDetailModal({
             >
               {isEditing ? (
                 <>
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder="What do you want to remember?"
-                    placeholderTextColor="#999"
-                    value={noteText}
-                    onChangeText={setNoteText}
-                    multiline
-                    numberOfLines={6}
-                    textAlignVertical="top"
-                    autoFocus
-                  />
+                  <View style={styles.noteInputRow}>
+                    <TextInput
+                      style={[styles.textInput, styles.noteTextInput]}
+                      placeholder="What do you want to remember?"
+                      placeholderTextColor="#999"
+                      value={noteText}
+                      onChangeText={setNoteText}
+                      multiline
+                      numberOfLines={6}
+                      textAlignVertical="top"
+                      autoFocus
+                      onSelectionChange={({ nativeEvent }) => {
+                        selectionRef.current = nativeEvent.selection;
+                      }}
+                    />
+                    <VoiceDictationButton
+                      selectionRef={selectionRef}
+                      onAppend={(transcript) => {
+                        const { start, end } = selectionRef.current;
+                        setNoteText((prev) => {
+                          const before = prev.slice(0, start);
+                          const after = prev.slice(end);
+                          const separator = before.length > 0 && !before.endsWith(' ') ? ' ' : '';
+                          return `${before}${separator}${transcript}${after}`;
+                        });
+                      }}
+                    />
+                  </View>
                   <TextInput
                     style={[styles.textInput, styles.sourceInput]}
                     placeholder="Source (optional)"
@@ -344,6 +363,16 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#ff9800',
     fontWeight: '600',
+  },
+  noteInputRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    marginBottom: 12,
+  },
+  noteTextInput: {
+    flex: 1,
+    marginBottom: 0,
   },
   textInput: {
     borderWidth: 1,

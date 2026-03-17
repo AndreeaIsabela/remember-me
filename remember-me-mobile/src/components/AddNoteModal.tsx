@@ -13,6 +13,7 @@ import {
   Animated,
   Dimensions,
 } from 'react-native';
+import { VoiceDictationButton } from './VoiceDictationButton';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const ANIMATION_DURATION = 300;
@@ -120,7 +121,7 @@ export function AddNoteModal({ visible, onClose, onSave }: AddNoteModalProps) {
             </View>
 
             <TextInput
-              style={styles.textInput}
+              style={[styles.textInput, styles.noteTextInput]}
               placeholder="What do you want to remember?"
               placeholderTextColor="#999"
               value={noteText}
@@ -130,6 +131,15 @@ export function AddNoteModal({ visible, onClose, onSave }: AddNoteModalProps) {
               textAlignVertical="top"
               autoFocus
             />
+            <View style={styles.voiceButtonRow}>
+              <VoiceDictationButton
+                onAppend={(transcript) =>
+                  setNoteText((prev) =>
+                    prev.length > 0 ? `${prev} ${transcript}` : transcript
+                  )
+                }
+              />
+            </View>
 
             <TextInput
               style={[styles.textInput, styles.sourceInput]}
@@ -208,6 +218,13 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: '#666',
     lineHeight: 26,
+  },
+  voiceButtonRow: {
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  noteTextInput: {
+    marginBottom: 8,
   },
   textInput: {
     borderWidth: 1,
